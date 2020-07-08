@@ -1,0 +1,1 @@
+void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm);
