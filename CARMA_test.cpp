@@ -32,7 +32,8 @@ TEST(MPI_Test, CARMA) {
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
 
-        param = {4,4,4};
+        int paramm[3] = {4,4,4};
+        param = paramm;
     }
 
 
@@ -47,6 +48,8 @@ TEST(MPI_Test, CARMA) {
 }
 
 int main(int argc, char* argv[]) {
+    int result = 0;
+    
     testing::InitGoogleTest(&argc, argv);
     MPI_Init(&argc, &argv);
 
