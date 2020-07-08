@@ -17,14 +17,16 @@ TEST(MPI_Test, CARMA) {
     double expected_C[4*4];
 
     if (rank == 0) {
-        A = {10., -1., 2., 0.,
+        double temp[4*4] = {10., -1., 2., 0.,
             -1., 11., -1., 3.,
             2., -1., 10., -1.,
             0.0, 3., -1., 8.};
-        B = {27., 4., -8., 3.,
+        double temp2[4*4] = {27., 4., -8., 3.,
             -1., -6., -12., 3.,
             -9., 13., 37., 0.,
             6., -3., -1., 20.};
+        A = temp;
+        B = temp2;
 
         double expected_C[4*4];
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
