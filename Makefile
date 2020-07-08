@@ -14,6 +14,9 @@ CARMA_test: CARMA_test.o CARMA.o gtest-all.o
 gtest-all.o : $(GTEST_DIR)/gtest-all.cc $(GTEST_DIR)/gtest.h
 	$(CXX) $(CCFLAGS) -c $(GTEST_DIR)/gtest-all.cc
 
+%CARMA_test.o: %.cpp %.h
+	$(CXX) $(CCFLAGS) -mkl -c $<
+
 %.o: %.cpp %.h
 	$(CXX) $(CCFLAGS) -c $<
 
