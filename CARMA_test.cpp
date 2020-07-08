@@ -10,10 +10,10 @@ TEST(MPI_Test, CARMA) {
     int rank, p;
     MPI_Comm_size(MPI_COMM_WORLD, &p);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    double A[4*4];
-    double B[4*4];
-    double C[4*4];
-    int param[3];
+    double *A;
+    double *B;
+    double *C;
+    int *param;
     double expected_C[4*4];
 
     if (rank == 0) {
@@ -38,7 +38,7 @@ TEST(MPI_Test, CARMA) {
 
     CARMA(&A, &B, &C, param, MPI_COMM_WORLD);
     if (rank == 0) {
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < 16; i++) {
             EXPECT_NEAR(expected_C[i], C[i], 1e-3) << " element y[" << i <<
                 "] is wrong:" << expected_C[i] << " " << C[i];
         }
