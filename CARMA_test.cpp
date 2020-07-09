@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include "mkl.h"
 #include <iostream>
-#include <CARMA.h>
+#include "CARMA.h"
 
 TEST(MPI_Test, CARMA) {
 
@@ -28,7 +28,6 @@ TEST(MPI_Test, CARMA) {
         A = temp;
         B = temp2;
 
-        double expected_C[4*4];
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
 
@@ -44,12 +43,16 @@ TEST(MPI_Test, CARMA) {
                 "] is wrong:" << expected_C[i] << " " << C[i];
         }
     }
+    free(A);
+    free(B);
+    free(C);
+
 
 }
 
 int main(int argc, char* argv[]) {
     int result = 0;
-    
+
     testing::InitGoogleTest(&argc, argv);
     MPI_Init(&argc, &argv);
 
