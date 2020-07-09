@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <mpi.h>
-#include <CARMA.h>
+#include "CARMA.h"
 
 using namespace std;
 
@@ -25,6 +25,13 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     k = param[1];
     n = param[2];
     if (rank != 0) {
+        if (m==0||k==0||n==0){
+            printf("k=%d\n",k );
+            printf("m=%d\n",m );
+            printf("n=%d\n",n );
+            printf("rank=%d\n",rank );
+            return;
+        }
         *A = (double*) malloc(sizeof(double)*(m*k));
         *B = (double*) malloc(sizeof(double)*(k*n));
         *C = (double*) malloc(sizeof(double)*(m*n));
@@ -37,7 +44,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     int log = 0;
     while (temp >>= 1)
         log++;
-    if ((temp - 1<<log) != 0)
+    if (rank != 0 && (rank - 1<<log) != 0)
         log++;
 
     //calculate floor(log(rank))
@@ -45,7 +52,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     int level = 0;
     while (temp >>= 1)
         level++;
-    if ((temp - 1<<level) != 0)
+    if ((size- 1<<level) != 0)
         level++;
 
     colors = (int*) malloc(sizeof(int)*level);
@@ -61,8 +68,12 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 n /= 2;
                 colors[i] = 3;
                 int new_param[3] = {m, k, n};
+                if (rank==0) {
+                    printf("k=%d\n",k );
+                    printf("m=%d\n",m );
+                    printf("n=%d\n",n );
+                }
                 MPI_Request req; //dummy
-                MPI_Isend(colors + i, 1, MPI_INT, temp, 0, comm, &req);
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split B vertically
@@ -87,8 +98,12 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 m /= 2;
                 colors[i] = 1;
                 int new_param[3] = {m, k, n};
+                if (rank==0) {
+                    printf("k=%d\n",k );
+                    printf("m=%d\n",m );
+                    printf("n=%d\n",n );
+                }
                 MPI_Request req; //dummy
-                MPI_Isend(colors + i, 1, MPI_INT, temp, 0, comm, &req);
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split A horizantally
@@ -105,8 +120,12 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 k /= 2;
                 colors[i] = 2;
                 int new_param[3] = {m, k, n};
+                if (rank==0) {
+                    printf("k=%d\n",k );
+                    printf("m=%d\n",m );
+                    printf("n=%d\n",n );
+                }
                 MPI_Request req; //dummy
-                MPI_Isend(colors + i, 1, MPI_INT, temp, 0, comm, &req);
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split A vertically
