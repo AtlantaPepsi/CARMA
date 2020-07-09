@@ -68,22 +68,19 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 n /= 2;
                 colors[i] = 3;
                 int new_param[3] = {m, k, n};
-                if (rank==0) {
-                    printf("k=%d\n",k );
-                    printf("m=%d\n",m );
-                    printf("n=%d\n",n );
-                }
+                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
                 MPI_Request req; //dummy
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split B vertically
                 double* B_left = (double*) malloc(sizeof(double)*(k*n));
                 double* B_right = (double*) malloc(sizeof(double)*(k*n));
+                printf("copy begins: %d\n", rank);
                 for(int j = 0; j < k; j++) {
                     copy(*B + i*2*n, *B + i*2*n + n, B_left + i*n);
                     copy(*B + i*2*n + n, *B + (i+1)*2*n, B_right + i*n);
                 }
-
+                printf("copy ends: %d\n", rank);
                 MPI_Isend(*A, m*k, MPI_DOUBLE, temp, 0, comm, &req);
                 MPI_Isend(B_right, k*n, MPI_DOUBLE, temp, 0, comm, &req);
                 MPI_Request_free(&req);
@@ -98,11 +95,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 m /= 2;
                 colors[i] = 1;
                 int new_param[3] = {m, k, n};
-                if (rank==0) {
-                    printf("k=%d\n",k );
-                    printf("m=%d\n",m );
-                    printf("n=%d\n",n );
-                }
+                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
                 MPI_Request req; //dummy
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
@@ -120,22 +113,19 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 k /= 2;
                 colors[i] = 2;
                 int new_param[3] = {m, k, n};
-                if (rank==0) {
-                    printf("k=%d\n",k );
-                    printf("m=%d\n",m );
-                    printf("n=%d\n",n );
-                }
+                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
                 MPI_Request req; //dummy
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split A vertically
                 double* A_left = (double*) malloc(sizeof(double)*(m*k));
                 double* A_right = (double*) malloc(sizeof(double)*(m*k));
+                printf("copy begins: %d\n", rank);
                 for(int j = 0; j < m; j++) {
                     copy(*A + i*2*k, *A + i*2*k + k, A_left + i*k);
                     copy(*A + i*2*k + k, *A + (i+1)*2*k, A_right + i*k);
                 }
-
+                printf("copy ends: %d\n", rank);
                 //split B horizantally
                 double* B_bot = *B + (k * n);
 
