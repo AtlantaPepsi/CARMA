@@ -54,7 +54,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         level++;
     if ((size- 1<<level) != 0)
         level++;
-
+    printf("rank %d: log:%d level:%d\n", rank, log, level);
     colors = (int*) malloc(sizeof(int)*level);
 
     //recursively split matrix
