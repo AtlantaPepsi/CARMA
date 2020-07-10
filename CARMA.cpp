@@ -39,27 +39,27 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         MPI_Recv(*B, k*n, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
     }
 
-    //calculate cell(log(rank))
+    //NOT calculate floor(log(rank))
     int temp = rank;
     int log = 0;
     while (temp >>= 1)
         log++;
-    if (rank != 0 && (rank - 1<<log) != 0)
+    if (rank != 0 && (rank - (1<<log)) == 0)
         log++;
 
-    //calculate floor(log(rank))
+    //calculate cell(log(rank))
     temp = size;
     int level = 0;
     while (temp >>= 1)
         level++;
-    if ((size- 1<<level) != 0)
+    if ((size- (1<<level)) != 0)
         level++;
     printf("rank %d: log:%d level:%d\n", rank, log, level);
     colors = (int*) malloc(sizeof(int)*level);
 
     //recursively split matrix
     for (int i = log; i < level; i++) {
-        temp = rank + 1<<i;
+        temp = rank + (1<<i);
         if (temp < size) {
 
             int maxx = (m>n) ? max(m,k) : max(n,k);
@@ -150,7 +150,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     }
 
     for (int i = level - 1; i >= log; i--) {
-        temp = rank + 1<<i;
+        temp = rank + (1<<i);
 
         if (temp < size) {
 
