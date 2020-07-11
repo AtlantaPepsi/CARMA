@@ -140,15 +140,15 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
             }
         }
     }
-
+    printf("rank %d begins\n", rank);
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
             for (int x = 0; x < k; x++) {
-                *C[i*n + j] += (*A[i*k + x]) * (*B[x*n + j]);
+                (*C)[i*n + j] += ((*A)[i*k + x]) * ((*B)[x*n + j]);
             }
         }
     }
-
+    printf("rank %d finishes\n", rank);
     for (int i = level - 1; i >= log; i--) {
         temp = rank + (1<<i);
 
