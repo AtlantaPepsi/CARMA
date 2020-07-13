@@ -27,6 +27,7 @@ TEST(MPI_Test, CARMA) {
             6., -3., -1., 20.};
         A = temp;
         B = temp2;
+        C = (double*)malloc(sizeof(double)*16);
 
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
@@ -42,10 +43,11 @@ TEST(MPI_Test, CARMA) {
             EXPECT_NEAR(expected_C[i], C[i], 1e-3) << " element y[" << i <<
                 "] is wrong:" << expected_C[i] << " " << C[i];
         }
+        free(A);
+        free(B);
+        free(C);
     }
-    free(A);
-    free(B);
-    free(C);
+    
 
 
 }
