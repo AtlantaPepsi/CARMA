@@ -41,11 +41,11 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
     //NOT calculate floor(log(rank))
     int temp = rank;
-    int log = 0;
+    int log = 1;
     while (temp >>= 1)
         log++;
-    if (rank != 0 && (rank - (1<<log)) == 0)
-        log++;
+    if (rank == 0)
+        log--;
 
     //calculate cell(log(rank))
     temp = size;
@@ -150,6 +150,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     }
     printf("rank %d finishes\n", rank);
     for (int i = level - 1; i >= log; i--) {
+        printf("rank %d receiving from %d\n",rank, temp);
         temp = rank + (1<<i);
 
         if (temp < size) {
@@ -210,6 +211,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     }
 
     if (rank != 0) {
+        temp = rank - (1 << (log-1));
+        printf("rank %d sending back to %d\n",rank, temp);
         MPI_Request req; //dummy
         MPI_Isend(*C, m*n, MPI_DOUBLE, temp, 0, comm, &req);
         MPI_Request_free(&req);
