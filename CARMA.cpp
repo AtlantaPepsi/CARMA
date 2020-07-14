@@ -194,7 +194,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 //MPI_Reduce(*C, new_C, m*n, MPI_DOUBLE, MPI_SUM, rank, comm01);
                 MPI_Recv(new_C, m*n, MPI_DOUBLE, temp, 0, comm, MPI_STATUS_IGNORE);
                 for (int j = 0; j < m*n; j++) {
-                    *C[j] += new_C[j];
+                    (*C)[j] += new_C[j];
                 }
                 free(new_C);
 
