@@ -1,4 +1,7 @@
 #include <mpi.h>
+#include <math.h>
+#include <random>
+#include <vector>
 #include <gtest/gtest.h>
 #include "mkl.h"
 #include <iostream>
@@ -17,6 +20,7 @@ TEST(MPI_Test, CARMA) {
     double expected_C[4*4];
 
     if (rank == 0) {
+        /*
         double temp[4*4] = {10., -1., 2., 0.,
             -1., 11., -1., 3.,
             2., -1., 10., -1.,
@@ -30,7 +34,17 @@ TEST(MPI_Test, CARMA) {
         C = (double*)malloc(sizeof(double)*16);
         std::copy(temp, temp+16, A);
         std::copy(temp2, temp2+16, B);
+        */
+        std::vector<double> A;
+        std::vector<double> B;
+        
+        std::normal_distribution distribution(200.0, 20.0);
 
+        std::default_random_engine generator;
+        for (int i = 0;i<5;i++) {
+            a[i] = distribution(generator);
+        }
+        
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
 
