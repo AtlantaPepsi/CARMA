@@ -77,8 +77,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 double* B_right = (double*) malloc(sizeof(double)*(k*n));
                 printf("copy begins: %d\n", rank);
                 for(int j = 0; j < k; j++) {
-                    copy(*B + i*2*n, *B + i*2*n + n, B_left + i*n);
-                    copy(*B + i*2*n + n, *B + (i+1)*2*n, B_right + i*n);
+                    copy(*B + j*2*n, *B + j*2*n + n, B_left + j*n);
+                    copy(*B + j*2*n + n, *B + (j+1)*2*n, B_right + j*n);
                 }
                 printf("copy ends: %d\n", rank);
                 MPI_Isend(*A, m*k, MPI_DOUBLE, temp, 0, comm, &req);
@@ -122,8 +122,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 double* A_right = (double*) malloc(sizeof(double)*(m*k));
                 printf("copy begins: %d\n", rank);
                 for(int j = 0; j < m; j++) {
-                    copy(*A + i*2*k, *A + i*2*k + k, A_left + i*k);
-                    copy(*A + i*2*k + k, *A + (i+1)*2*k, A_right + i*k);
+                    copy(*A + j*2*k, *A + j*2*k + k, A_left + j*k);
+                    copy(*A + j*2*k + k, *A + (j+1)*2*k, A_right + j*k);
                 }
                 printf("copy ends: %d\n", rank);
                 //split B horizantally
@@ -160,8 +160,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 double* new_C = (double*) malloc(sizeof(double)*(m*2*n));
                 MPI_Recv(C_right, m*n, MPI_DOUBLE, temp, 0, comm, MPI_STATUS_IGNORE);
                 for(int j = 0; j < m; j++) {
-                    copy(*C + n*j, *C + (n+1)*j, new_C + j*(2*n));
-                    copy(C_right + n*j, C_right + (n+1)*j, new_C + j*(2*n)+n);
+                    copy(*C + n*j, *C + (j+1)*n, new_C + j*(2*n));
+                    copy(C_right + n*j, C_right + (j+1)*n, new_C + j*(2*n)+n);
                 }
                 free(C_right);
                 free(*C);
