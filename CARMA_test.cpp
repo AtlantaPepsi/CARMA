@@ -25,9 +25,11 @@ TEST(MPI_Test, CARMA) {
             -1., -6., -12., 3.,
             -9., 13., 37., 0.,
             6., -3., -1., 20.};
-        A = temp;
-        B = temp2;
+        A = (double*)malloc(sizeof(double)*16);
+        B = (double*)malloc(sizeof(double)*16);
         C = (double*)malloc(sizeof(double)*16);
+        std::copy(temp, temp+16, A);
+        std::copy(temp2, temp2+16, B);
 
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
