@@ -39,7 +39,7 @@ TEST(MPI_Test, CARMA) {
         std::vector<double> b(30*50);
         A = (double*)malloc(sizeof(double)*600);
         B = (double*)malloc(sizeof(double)*1500);
-        
+        C = (double*)malloc(sizeof(double)*1000);
         std::normal_distribution<double> distribution(200.0, 20.0);
 
         std::default_random_engine generator;
