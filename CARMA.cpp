@@ -17,7 +17,9 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     //MPI_Group group, new_group;
     //MPI_Comm comm01;
     //MPI_Comm_group( comm, &group );
-
+        
+    if (rank == 0) printf("*B: %p\n", *B);  ///this is different from the value passed in by caller (
+    
     if (rank != 0) {
         MPI_Recv(param, 3, MPI_INT, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
     }
@@ -39,7 +41,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         MPI_Recv(*B, k*n, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
     }
 
-    //NOT calculate floor(log(rank))
+    //calculate address of next receiver
     int temp = rank;
     int log = 1;
     while (temp >>= 1)
