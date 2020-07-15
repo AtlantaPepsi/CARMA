@@ -17,7 +17,7 @@ TEST(MPI_Test, CARMA) {
     double *B;
     double *C;
     int *param;
-    double expected_C[4*4];
+    double expected_C[20*50];
 
     if (rank == 0) {
         /*
@@ -35,27 +35,34 @@ TEST(MPI_Test, CARMA) {
         std::copy(temp, temp+16, A);
         std::copy(temp2, temp2+16, B);
         */
-        std::vector<double> A;
-        std::vector<double> B;
+        std::vector<double> a(20*30);
+        std::vector<double> b(30*50);
+        A = (double*)malloc(sizeof(double)*600);
+        B = (double*)malloc(sizeof(double)*1500);
         
-        std::normal_distribution distribution(200.0, 20.0);
+        std::normal_distribution<double> distribution(200.0, 20.0);
 
         std::default_random_engine generator;
-        for (int i = 0;i<5;i++) {
+        for (int i = 0;i<600;i++) {
             a[i] = distribution(generator);
+        }
+        for (int i = 0;i<1500;i++) {
+            b[i] = distribution(generator);
         }
         
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                    4, 4, 4, 1, A, 4, B, 4, 0, expected_C, 4);
+                    20, 50, 30, 1, A, 30, B, 50, 0, expected_C, 50);
 
-        int paramm[3] = {4,4,4};
+        printf("B:%p\n",&B);
+        
+        int paramm[3] = {20,30,50};
         param = paramm;
     }
 
 
     CARMA(&A, &B, &C, param, MPI_COMM_WORLD);
     if (rank == 0) {
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < 1000; i++) {
             EXPECT_NEAR(expected_C[i], C[i], 1e-3) << " element y[" << i <<
                 "] is wrong:" << expected_C[i] << " " << C[i];
         }
