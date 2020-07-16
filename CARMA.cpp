@@ -23,7 +23,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     n = param[2];
     if (rank != 0) {
         if (m==0||k==0||n==0){
-            return;
+            printf("%d: redundant proceesor\n", rank);
+	    return;
         }
         *A = (double*) malloc(sizeof(double)*(m*k));
         *B = (double*) malloc(sizeof(double)*(k*n));
@@ -94,12 +95,12 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 //split B vertically
                 double* B_left = (double*) malloc(sizeof(double)*(k*n));
                 double* B_right = (double*) malloc(sizeof(double)*(k*n));
-                printf("copy begins: %d\n", rank);
+                //printf("copy begins: %d\n", rank);
                 for(int j = 0; j < k; j++) {
                     copy(*B + j*2*n, *B + j*2*n + n, B_left + j*n);
                     copy(*B + j*2*n + n, *B + (j+1)*2*n, B_right + j*n);
                 }
-                printf("copy ends: %d\n", rank);
+                //printf("copy ends: %d\n", rank);
                 MPI_Isend(*A, m*k, MPI_DOUBLE, temp, 0, comm, &req);
                 MPI_Isend(B_right, k*n, MPI_DOUBLE, temp, 0, comm, &req);
                 MPI_Request_free(&req);
