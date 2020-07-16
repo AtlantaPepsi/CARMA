@@ -84,17 +84,18 @@ void test(int m, int k, int n) {
 int main(int argc, char* argv[]) {
     int result = 0;
 
-    testing::InitGoogleTest(&argc, argv);
+    //testing::InitGoogleTest(&argc, argv);
     MPI_Init(&argc, &argv);
+    int m = atoi(argv[1]);
+    int k = atoi(argv[2]);
+    int n = atoi(argv[3]);
 
-
-    test(60,50,10);
-    int rank, p;
-    MPI_Comm_size(MPI_COMM_WORLD, &p);
+    test(m,k,n);
+    int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
-   printf("%d ok\n",rank); 
-//printf("wtf %d\n",rank);
+    printf("%d done\n",rank); 
+
 
     MPI_Finalize();
 
