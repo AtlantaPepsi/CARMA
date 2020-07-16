@@ -9,13 +9,13 @@ test: CARMA_test
 	echo "### TESTING WITH 4 PROCESSES ###"; mpirun -np 4 ./CARMA_test
 
 CARMA_test: CARMA_test.o CARMA.o gtest-all.o
-	$(CXX) -o $@ $^ $(LDFLAGS) -mkl
+	$(CXX) -g -o $@ $^ $(LDFLAGS) -mkl
 
 gtest-all.o : $(GTEST_DIR)/gtest-all.cc $(GTEST_DIR)/gtest.h
 	$(CXX) $(CCFLAGS) -c $(GTEST_DIR)/gtest-all.cc
 
 %.o: %.cpp %.h
-	$(CXX) $(CCFLAGS) -c $<
+	$(CXX) -g $(CCFLAGS) -c $<
 
 %.o: %.cpp
-	$(CXX) $(CCFLAGS) -c $<
+	$(CXX) -g $(CCFLAGS) -c $<

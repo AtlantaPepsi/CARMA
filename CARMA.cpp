@@ -14,11 +14,6 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
 
-    //MPI_Group group, new_group;
-    //MPI_Comm comm01;
-    //MPI_Comm_group( comm, &group );
-        
-    if (rank == 0) printf("B: %p\n", B);  ///this is different from the value passed in by caller (CARMA_test.cpp 56) 
     
     if (rank != 0) {
         MPI_Recv(param, 3, MPI_INT, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
@@ -56,7 +51,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         level++;
     if ((size- (1<<level)) != 0)
         level++;
-    printf("rank %d: log:%d level:%d\n", rank, log, level);
+    
     colors = (int*) malloc(sizeof(int)*level);
 
     //recursively split matrix
@@ -65,12 +60,29 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         if (temp < size) {
 
             int maxx = (m>n) ? max(m,k) : max(n,k);
+            
+	    if (maxx == m) {
+                m /= 2;
+                colors[i] = 1;
+                int new_param[3] = {m, k, n};
+                //printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
+                MPI_Request req; //dummy
+                MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
+
+                //split A horizantally
+                double* A_bot = *A + (m * k);
+
+                MPI_Isend(A_bot, m*k, MPI_DOUBLE, temp, 0, comm, &req);
+                MPI_Isend(*B, k*n, MPI_DOUBLE, temp, 0, comm, &req);
+                MPI_Request_free(&req);
+                continue;
+            }
 
             if (maxx == n) {
                 n /= 2;
                 colors[i] = 3;
                 int new_param[3] = {m, k, n};
-                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
+                //printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
                 MPI_Request req; //dummy
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
@@ -93,41 +105,23 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 continue;
             }
 
-            if (maxx == m) {
-                m /= 2;
-                colors[i] = 1;
-                int new_param[3] = {m, k, n};
-                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
-                MPI_Request req; //dummy
-                MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
-
-                //split A horizantally
-                double* A_bot = *A + (m * k);
-
-                MPI_Isend(A_bot, m*k, MPI_DOUBLE, temp, 0, comm, &req);
-                MPI_Isend(*B, k*n, MPI_DOUBLE, temp, 0, comm, &req);
-                MPI_Request_free(&req);
-                continue;
-            }
-
-
             if (maxx == k) {
                 k /= 2;
                 colors[i] = 2;
                 int new_param[3] = {m, k, n};
-                printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
+                //printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
                 MPI_Request req; //dummy
                 MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 
                 //split A vertically
                 double* A_left = (double*) malloc(sizeof(double)*(m*k));
                 double* A_right = (double*) malloc(sizeof(double)*(m*k));
-                printf("copy begins: %d\n", rank);
+                
                 for(int j = 0; j < m; j++) {
                     copy(*A + j*2*k, *A + j*2*k + k, A_left + j*k);
                     copy(*A + j*2*k + k, *A + (j+1)*2*k, A_right + j*k);
                 }
-                printf("copy ends: %d\n", rank);
+                
                 //split B horizantally
                 double* B_bot = *B + (k * n);
 
@@ -142,7 +136,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
             }
         }
     }
-    printf("rank %d begins\n", rank);
+    //printf("rank %d begins\n", rank);
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
             for (int x = 0; x < k; x++) {
@@ -150,9 +144,9 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
             }
         }
     }
-    printf("rank %d finishes\n", rank);
+    //printf("rank %d finishes\n", rank);
     for (int i = level - 1; i >= log; i--) {
-        printf("rank %d receiving from %d\n",rank, temp);
+        //printf("rank %d receiving from %d\n",rank, temp);
         temp = rank + (1<<i);
 
         if (temp < size) {
@@ -187,10 +181,6 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
             if (colors[i] == 2) {
 
-                //int subcomm[2] = {rank,temp};
-                //MPI_Group_incl( group, 2, subcomm, &new_group );
-                //MPI_Comm_create( comm, new_group, &comm01 );
-
                 double* new_C = (double*) malloc(sizeof(double)*(m*n));
 
                 //MPI_Reduce(*C, new_C, m*n, MPI_DOUBLE, MPI_SUM, rank, comm01);
@@ -201,8 +191,6 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
                 free(new_C);
 
                 k *= 2;
-                //MPI_Group_free( &new_group );
-                //MPI_Comm_free( &comm01 );
                 continue;
 
             }
@@ -214,7 +202,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
     if (rank != 0) {
         temp = rank - (1 << (log-1));
-        printf("rank %d sending back to %d\n",rank, temp);
+        //printf("rank %d sending back to %d\n",rank, temp);
         MPI_Request req; //dummy
         MPI_Isend(*C, m*n, MPI_DOUBLE, temp, 0, comm, &req);
         MPI_Request_free(&req);

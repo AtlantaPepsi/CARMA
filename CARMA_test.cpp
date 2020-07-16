@@ -6,8 +6,8 @@
 #include "mkl.h"
 #include <iostream>
 #include "CARMA.h"
-
-TEST(MPI_Test, CARMA) {
+void test();
+void test(int m, int k, int n) {
 
 
     int rank, p;
@@ -16,8 +16,8 @@ TEST(MPI_Test, CARMA) {
     double *A;
     double *B;
     double *C;
-    int *param;
-    double expected_C[20*50];
+    int *param=(int*)malloc(sizeof(int)*3);
+    double expected_C[m*n];
 
     if (rank == 0) {
         /*
@@ -35,43 +35,47 @@ TEST(MPI_Test, CARMA) {
         std::copy(temp, temp+16, A);
         std::copy(temp2, temp2+16, B);
         */
-        std::vector<double> a(20*30);
-        std::vector<double> b(30*50);
-        A = (double*)malloc(sizeof(double)*600);
-        B = (double*)malloc(sizeof(double)*1500);
-        C = (double*)malloc(sizeof(double)*1000);
+        std::vector<double> a(m*k);
+        std::vector<double> b(k*n);
+        A = (double*)malloc(sizeof(double)*m*k);
+        B = (double*)malloc(sizeof(double)*k*n);
+        C = (double*)malloc(sizeof(double)*m*n);
+        
         std::normal_distribution<double> distribution(200.0, 20.0);
 
         std::default_random_engine generator;
-        for (int i = 0;i<600;i++) {
+        for (int i = 0;i < a.size();i++) {
             a[i] = distribution(generator);
         }
-        for (int i = 0;i<1500;i++) {
+        for (int i = 0;i < b.size();i++) {
             b[i] = distribution(generator);
         }
         
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                    20, 50, 30, 1, A, 30, B, 50, 0, expected_C, 50);
+                    m, n, k, 1, A, k, B, n, 0, expected_C, n);
 
-        printf("B:%p\n",&B);
+        printf("A:%p B:%p C:%p\n",&A,&B,&C);
+       //printf("%f\n",C[0]); 
+        param[0] = m;
+        param[1] = k;
+        param[2] = n;
         
-        int paramm[3] = {20,30,50};
-        param = paramm;
     }
 
-
+//	printf("%p\n",&A);
     CARMA(&A, &B, &C, param, MPI_COMM_WORLD);
     if (rank == 0) {
-        for (int i = 0; i < 1000; i++) {
-            EXPECT_NEAR(expected_C[i], C[i], 1e-3) << " element y[" << i <<
-                "] is wrong:" << expected_C[i] << " " << C[i];
+        for (int i = 0; i < m*n; i++) {
+            if(abs(expected_C[i]-C[i]) > 1e-3) {
+		printf(" element y[%d] is wrong: %f, %f\n", i, expected_C[i], C[i]);
+	    }
         }
         free(A);
         free(B);
         free(C);
     }
     
-
+    free(param);
 
 }
 
@@ -82,12 +86,17 @@ int main(int argc, char* argv[]) {
     MPI_Init(&argc, &argv);
 
 
-    result = RUN_ALL_TESTS();
-
+    test(60,50,10);
+    int rank, p;
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    
+   printf("%d ok\n",rank); 
+//printf("wtf %d\n",rank);
 
     MPI_Finalize();
 
-
+	//printf("congrats!\n");
     return 0;
 
 
