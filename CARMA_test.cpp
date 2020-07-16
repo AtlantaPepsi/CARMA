@@ -6,7 +6,7 @@
 #include "mkl.h"
 #include <iostream>
 #include "CARMA.h"
-void test();
+
 void test(int m, int k, int n) {
 
 
