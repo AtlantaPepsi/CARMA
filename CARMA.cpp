@@ -23,10 +23,6 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
     n = param[2];
     if (rank != 0) {
         if (m==0||k==0||n==0){
-            printf("k=%d\n",k );
-            printf("m=%d\n",m );
-            printf("n=%d\n",n );
-            printf("rank=%d\n",rank );
             return;
         }
         *A = (double*) malloc(sizeof(double)*(m*k));
@@ -60,6 +56,15 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         if (temp < size) {
 
             int maxx = (m>n) ? max(m,k) : max(n,k);
+	    
+	    if (maxx == 1) {       //redundant processor
+	    	colors[i] = 4;
+		int new_param[3] = {0, 0, 0};
+		MPI_Request req; //dummy
+                MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
+		MPI_Request_free(&req);
+                continue;
+	    }
             
 	    if (maxx == m) {
                 m /= 2;
@@ -150,7 +155,11 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
         temp = rank + (1<<i);
 
         if (temp < size) {
-
+	    
+	    if (colors[i] == 4) {
+		continue;
+	    }
+		
             if (colors[i] == 3) {
                 double* C_right = (double*) malloc(sizeof(double)*(m*n));
                 double* new_C = (double*) malloc(sizeof(double)*(m*2*n));
