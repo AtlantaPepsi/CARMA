@@ -1,9 +1,7 @@
-#include <mpi.h>
+#include <gtest/gtest.h>
 #include <math.h>
 #include <random>
 #include <vector>
-#include <gtest/gtest.h>
-#include "mkl.h"
 #include <iostream>
 #include "CARMA.h"
 
@@ -42,7 +40,7 @@ void test(int m, int k, int n) {
         C = (double*)malloc(sizeof(double)*m*n);
 	std::copy(a.begin(), a.end(), A);
         std::copy(b.begin(), b.end(), B);
-        
+
         std::normal_distribution<double> distribution(200.0, 20.0);
 
         std::default_random_engine generator;
@@ -52,16 +50,16 @@ void test(int m, int k, int n) {
         for (int i = 0;i < b.size();i++) {
             b[i] = distribution(generator);
         }
-        
+
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                     m, n, k, 1, A, k, B, n, 0, expected_C, n);
 
         printf("A:%p B:%p C:%p\n",&A,&B,&C);
-       //printf("%f\n",C[0]); 
+       //printf("%f\n",C[0]);
         param[0] = m;
         param[1] = k;
         param[2] = n;
-        
+
     }
 
 //	printf("%p\n",&A);
@@ -76,7 +74,7 @@ void test(int m, int k, int n) {
         free(B);
         free(C);
     }
-    
+
     free(param);
 
 }
@@ -93,8 +91,8 @@ int main(int argc, char* argv[]) {
     test(m,k,n);
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
-    printf("%d done\n",rank); 
+
+    printf("%d done\n",rank);
 
 
     MPI_Finalize();
