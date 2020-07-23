@@ -144,6 +144,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 	//printf("rank %d begins\n", rank);
 	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 					m, n, k, 1, *A, k, *B, n, 0, *C, n);
+/*
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++) {
 			for (int x = 0; x < k; x++) {
@@ -151,6 +152,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			}
 		}
 	}
+*/
 	//printf("rank %d finishes\n", rank);
 	for (int i = level - 1; i >= log; i--) {
 		//printf("rank %d receiving from %d\n",rank, temp);
@@ -196,9 +198,12 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
 				//MPI_Reduce(*C, new_C, m*n, MPI_DOUBLE, MPI_SUM, rank, comm01);
 				MPI_Recv(new_C, m*n, MPI_DOUBLE, temp, 0, comm, MPI_STATUS_IGNORE);
+/*
 				for (int j = 0; j < m*n; j++) {
 					(*C)[j] += new_C[j];
 				}
+*/
+				vdAdd(m*n, *C, new_C, *C);
 				free(new_C);
 
 				k *= 2;
