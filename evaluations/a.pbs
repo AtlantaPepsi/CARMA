@@ -1,0 +1,11 @@
+#PBS -N vs_dgemm
+#PBS -l nodes=15:ppn=24
+#PBS -l pmem=2gb
+#PBS -l walltime=00:30:00
+#PBS -q hive
+#PBS -j oe
+#PBS -o a.out
+
+
+cd ~/data/CARMA
+module load intel
