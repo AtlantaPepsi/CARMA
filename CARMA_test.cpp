@@ -64,13 +64,13 @@ void test(int m, int k, int n) {
 	}
 
 //	printf("%p\n",&A);
-	auto t1 = chrono::high_resolution_clock::now();
+	auto t1 = std::chrono::high_resolution_clock::now();
 
 	CARMA(&A, &B, &C, param, MPI_COMM_WORLD);
 
-    auto t2 = chrono::high_resolution_clock::now();
+    	auto t2 = std::chrono::high_resolution_clock::now();
 
-    chrono::duration<double, milli> duration = t2 - t1;
+    	std::chrono::duration<double, std::milli> duration = t2 - t1;
 
 
 
@@ -80,7 +80,7 @@ void test(int m, int k, int n) {
 				printf(" element y[%d] is wrong: %f, %f\n", i, expected_C[i], C[i]);
 			}
 		}
-		printf("time: %f\n", duration.count());
+		printf("time: %f ms\n", duration.count());
 		free(A);
 		free(B);
 		free(C);
