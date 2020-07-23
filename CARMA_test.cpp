@@ -39,8 +39,7 @@ void test(int m, int k, int n) {
 		A = (double*)malloc(sizeof(double)*m*k);
 		B = (double*)malloc(sizeof(double)*k*n);
 		C = (double*)malloc(sizeof(double)*m*n);
-		std::copy(a.begin(), a.end(), A);
-		std::copy(b.begin(), b.end(), B);
+		
 
 		std::normal_distribution<double> distribution(200.0, 20.0);
 
@@ -52,6 +51,9 @@ void test(int m, int k, int n) {
 			b[i] = distribution(generator);
 		}
 
+		std::copy(a.begin(), a.end(), A);
+		std::copy(b.begin(), b.end(), B);
+		
 		cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
 					m, n, k, 1, A, k, B, n, 0, expected_C, n);
 
