@@ -219,9 +219,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 	if (rank != 0) {
 		temp = rank - (1 << (log-1));
 		//printf("rank %d sending back to %d\n",rank, temp);
-		MPI_Request req; //dummy
-		MPI_Isend(*C, m*n, MPI_DOUBLE, temp, 0, comm, &req);
-		MPI_Request_free(&req);
+		MPI_Send(*C, m*n, MPI_DOUBLE, temp, 0, comm);
 		free(*C);
 		free(*A);
 		free(*B);
