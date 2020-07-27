@@ -16,7 +16,7 @@ void test(int m, int k, int n) {
 	double *B;
 	double *C;
 	int *param=(int*)malloc(sizeof(int)*3);
-	double expected_C[m*n];
+	double* expected_C = new double[m*n];
 
 	if (rank == 0) {
 		/*
@@ -87,7 +87,7 @@ void test(int m, int k, int n) {
 		free(B);
 		free(C);
 	}
-
+	delete[] expected_C;
 	free(param);
 
 }
