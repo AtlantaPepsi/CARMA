@@ -10,6 +10,7 @@ using namespace std;
 void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pass in &(double*)
 {
 	int rank, size, m, k, n;//, *colors, *parity;
+	MPI_Request req, req1, req2, req3;
 	MPI_Comm_rank( comm, &rank );
 	MPI_Comm_size( comm, &size );
 
@@ -28,8 +29,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 		*A = (double*) malloc(sizeof(double)*(m*k));
 		*B = (double*) malloc(sizeof(double)*(k*n));
 		*C = (double*) malloc(sizeof(double)*(m*n));
-		MPI_Recv(*A, m*k, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
-		MPI_Recv(*B, k*n, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, MPI_STATUS_IGNORE);
+		MPI_Irecv(*B, k*n, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, &req);
+		MPI_Irecv(*A, m*k, MPI_DOUBLE, MPI_ANY_SOURCE, 0, comm, &req1);
 	}
 
 	//calculate address of next receiver
@@ -50,7 +51,9 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
 	int colors[level];//colors = (int*) malloc(sizeof(int)*level); not freed yet
 	int parity[level];//parity = (int*) malloc(sizeof(int)*level);
-
+	MPI_Wait(&req1,MPI_STATUS_IGNORE);
+	MPI_Wait(&req,MPI_STATUS_IGNORE);
+	
 	//recursively split matrix
 	for (int i = log; i < level; i++) {
 		temp = rank + (1<<i);
@@ -61,7 +64,6 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			if (maxx == 1) {       //redundant processor
 				colors[i] = 4;
 				int new_param[3] = {0, 0, 0};
-				MPI_Request req; //dummy
 				MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req);
 				MPI_Wait(&req,MPI_STATUS_IGNORE);
 				MPI_Request_free(&req);
@@ -70,74 +72,80 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
 			if (maxx == m) {
 				int m1 = m/2;
-				m = m/2 + m%2;
-				parity[i] = M%2 == 0 ? 0:1;
-				colors[i] = 1;
 				int new_param[3] = {m1, k, n};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
-				MPI_Request req1, req2, req3; //dummy
 				MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req1);
-
+				MPI_Isend(*B, k*n, MPI_DOUBLE, temp, 0, comm, &req3);
+				
+				parity[i] = m%2 == 0 ? 0:1;
+				colors[i] = 1;
+				m = m/2 + m%2;
+								
 				//split A horizantally
 				double* A_bot = *A + (m * k);
 
 				MPI_Isend(A_bot, m1*k, MPI_DOUBLE, temp, 0, comm, &req2);
-				MPI_Isend(*B, k*n, MPI_DOUBLE, temp, 0, comm, &req3);
 				MPI_Wait(&req1,MPI_STATUS_IGNORE);
 				MPI_Wait(&req2,MPI_STATUS_IGNORE);
 				MPI_Wait(&req3,MPI_STATUS_IGNORE);
-				MPI_Request_free(&req1);
-				MPI_Request_free(&req2);
-				MPI_Request_free(&req3);
+				//MPI_Request_free(&req1);
+				//MPI_Request_free(&req2);
+				//MPI_Request_free(&req3);
 				continue;
 			}
 
 			if (maxx == n) {
-				int N = n;
 				int n1 = n/2;
-				n = N - n1;
-				colors[i] = 3;
-				parity[i] = N%2 == 0 ? 0:1;
 				int new_param[3] = {m, k, n1};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
-				MPI_Request req1, req2, req3; //dummy
 				MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req1);
-
+				
+				int N = n;
+				n = N - n1;
 				//split B vertically
 				double* B_left = (double*) malloc(sizeof(double)*(k*n));
 				double* B_right = (double*) malloc(sizeof(double)*(k*n1));
+				
 				//printf("copy begins: %d\n", rank);
 				for(int j = 0; j < k; j++) {
 					copy(*B + j*N, *B + j*N + n, B_left + j*n);
 					copy(*B + j*N + n, *B + (j+1)*N, B_right + j*n1);
 				}
 				//printf("copy ends: %d\n", rank);
-				MPI_Isend(*A, m*k, MPI_DOUBLE, temp, 0, comm, &req2);
 				MPI_Isend(B_right, k*n1, MPI_DOUBLE, temp, 0, comm, &req3);
+				
+				MPI_Isend(*A, m*k, MPI_DOUBLE, temp, 0, comm, &req2);
+				
+				
+				free(*B);
+				*B = B_left;
+				colors[i] = 3;
+				parity[i] = N%2 == 0 ? 0:1;
+				
 				MPI_Wait(&req1,MPI_STATUS_IGNORE);
 				MPI_Wait(&req2,MPI_STATUS_IGNORE);
 				MPI_Wait(&req3,MPI_STATUS_IGNORE);
-				MPI_Request_free(&req1);
-				MPI_Request_free(&req2);
-				MPI_Request_free(&req3);
-
 				free(B_right);
-				free(*B);
-				*B = B_left;
+				//MPI_Request_free(&req1);
+				//MPI_Request_free(&req2);
+				//MPI_Request_free(&req3);
+				
 				continue;
 			}
 
 			if (maxx == k) {
-				int K = k;
 				int k1 = k/2;
-				k = K - k1;
-				colors[i] = 2;
-				parity[i] = K%2 == 0 ? 0:1;
 				int new_param[3] = {m, k1, n};
-				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
-				MPI_Request req1, req2, req3; //dummy
 				MPI_Isend(new_param, 3, MPI_INT, temp, 0, comm, &req1);
-
+				
+				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
+				
+				int K = k;
+				k = K - k1;
+				//split B horizantally
+				double* B_bot = *B + (k * n);
+				MPI_Isend(B_bot, k1*n, MPI_DOUBLE, temp, 0, comm, &req3);
+				
 				//split A vertically
 				double* A_left = (double*) malloc(sizeof(double)*(m*k));
 				double* A_right = (double*) malloc(sizeof(double)*(m*k1));
@@ -146,22 +154,18 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 					copy(*A + j*K, *A + j*K + k, A_left + j*k);
 					copy(*A + j*K + k, *A + (j+1)*K, A_right + j*k1);
 				}
-
-				//split B horizantally
-				double* B_bot = *B + (k * n);
-
 				MPI_Isend(A_right, m*k1, MPI_DOUBLE, temp, 0, comm, &req2);
-				MPI_Isend(B_bot, k1*n, MPI_DOUBLE, temp, 0, comm, &req3);
+				
+				colors[i] = 2;
+				parity[i] = K%2 == 0 ? 0:1;
+				
+				free(*A);
+				*A = A_left;
+				
 				MPI_Wait(&req1,MPI_STATUS_IGNORE);
 				MPI_Wait(&req2,MPI_STATUS_IGNORE);
 				MPI_Wait(&req3,MPI_STATUS_IGNORE);
-				MPI_Request_free(&req1);
-				MPI_Request_free(&req2);
-				MPI_Request_free(&req3);
-
 				free(A_right);
-				free(*A);
-				*A = A_left;
 				continue;
 			}
 		}
@@ -255,10 +259,15 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 	if (rank != 0) {
 		temp = rank - (1 << (log-1));
 		//printf("rank %d sending back to %d\n",rank, temp);
-		MPI_Send(*C, m*n, MPI_DOUBLE, temp, 0, comm);
+		MPI_Isend(*C, m*n, MPI_DOUBLE, temp, 0, comm, &req);
 		free(*C);
 		free(*A);
 		free(*B);
+		MPI_Request_free(&req1);
+		MPI_Request_free(&req2);
+		MPI_Request_free(&req3);
+		MPI_Wait(&req,MPI_STATUS_IGNORE);
+		MPI_Request_free(&req);							
 	}
 
 }
