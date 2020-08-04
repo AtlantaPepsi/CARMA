@@ -8,7 +8,7 @@ CCFLAGS += -I.
 test: CARMA_test
 	@echo "usage: mpirun -np <#processors> ./CARMA_test <m> <k> <n>"
 	@echo "### TESTING WITH 4 PROCESSES, [m,k,n] = [20,30,50]  ###" 
-	mpirun -np 4 ./CARMA_test 20 30 50
+	mpirun -np 4 ./CARMA_test 2000 2000 2000
 
 CARMA_test: CARMA_test.o CARMA.o 
 	$(CXX) -g -o $@ $^ $(LDFLAGS) -mkl
