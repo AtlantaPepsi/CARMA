@@ -9,3 +9,4 @@
 
 cd ~/data/CARMA
 module load intel
+mpirun -np 360 ./CARMA_test 2000 100000 2000
