@@ -9,7 +9,7 @@ using namespace std;
 
 void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pass in &(double*)
 {
-	int rank, size, m, k, n, *colors;
+	int rank, size, m, k, n;//, *colors, *parity;
 	MPI_Comm_rank( comm, &rank );
 	MPI_Comm_size( comm, &size );
 
@@ -48,7 +48,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 	if ((size- (1<<level)) != 0)
 		level++;
 
-	colors = (int*) malloc(sizeof(int)*level);
+	int colors[level];//colors = (int*) malloc(sizeof(int)*level); not freed yet
+	int parity[level];//parity = (int*) malloc(sizeof(int)*level);
 
 	//recursively split matrix
 	for (int i = log; i < level; i++) {
@@ -70,6 +71,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			if (maxx == m) {
 				int m1 = m/2;
 				m = m/2 + m%2;
+				parity[i] = M%2 == 0 ? 0:1;
 				colors[i] = 1;
 				int new_param[3] = {m1, k, n};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
@@ -95,6 +97,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				int n1 = n/2;
 				n = N - n1;
 				colors[i] = 3;
+				parity[i] = N%2 == 0 ? 0:1;
 				int new_param[3] = {m, k, n1};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
 				MPI_Request req1, req2, req3; //dummy
@@ -129,6 +132,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				int k1 = k/2;
 				k = K - k1;
 				colors[i] = 2;
+				parity[i] = K%2 == 0 ? 0:1;
 				int new_param[3] = {m, k1, n};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
 				MPI_Request req1, req2, req3; //dummy
@@ -186,8 +190,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			}
 
 			if (colors[i] == 3) {
-				int N = n%2==1 ? 2*n-1:n*2;
-				int n2 = n%2==1 ? n-1:n;
+				int n2 = parity[i] == 0 ? n:n-1;
+				int N = n + n2;
 				double* C_right = (double*) malloc(sizeof(double)*(m*n2));
 				double* new_C = (double*) malloc(sizeof(double)*(m*N));
 				//if (temp == 10) printf("!!!!%d: %d,%d\n",rank,m,n);
@@ -205,8 +209,8 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			}
 
 			if (colors[i] == 1) {
-				int M = m%2==1 ? 2*m-1:m*2; 
-				int m2 = m%2==1 ? m-1:m;
+				int m2 = parity[i]==0 ? m:m-1;
+				int M = m + m2; 
 				double* C_bot = (double*) malloc(sizeof(double)*(m2*n));
 				double* new_C = (double*) malloc(sizeof(double)*(M*n));
 				//if (temp == 10) printf("!!!!%d: %d,%d\n",rank,m,n);
@@ -237,7 +241,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				vdAdd(m*n, *C, new_C, *C);
 				free(new_C);
 
-				k = k%2==1 ? k*2-1:2*k;
+				k = parity[i]==1 ? k*2-1:2*k;
 		printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
 				continue;
 
