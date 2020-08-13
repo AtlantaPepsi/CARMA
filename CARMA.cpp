@@ -69,9 +69,10 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 			}
 
 			if (maxx == m) {
+				parity[i] = m%2 == 0 ? 0:1;
 				int m1 = m/2;
 				m = m/2 + m%2;
-				parity[i] = M%2 == 0 ? 0:1;
+				
 				colors[i] = 1;
 				int new_param[3] = {m1, k, n};
 				//printf("spliting: source:%d target:%d m:%d n:%d k:%d\n", rank, temp, m, n, k);
@@ -184,7 +185,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 
 		if (temp < size) {
 
-		printf("rank %d receiving from %d\n",rank, temp);
+		//printf("rank %d receiving from %d\n",rank, temp);
 			if (colors[i] == 4) {
 				continue;
 			}
@@ -204,7 +205,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				free(*C);
 				*C = new_C;
 				n = N;
-		printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
+		//printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
 				continue;
 			}
 
@@ -222,7 +223,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				free(*C);
 				*C = new_C;
 				m = M;
-		printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
+		//printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
 				continue;
 			}
 
@@ -242,7 +243,7 @@ void CARMA(double** A, double** B, double** C, int* param, MPI_Comm comm)  //pas
 				free(new_C);
 
 				k = parity[i]==1 ? k*2-1:2*k;
-		printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
+		//printf("rank %d roger %d: %d\n",rank, temp, colors[i]);
 				continue;
 
 			}
